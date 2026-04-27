@@ -1,5 +1,10 @@
 # Immich Changelog
 
+## [Custom Downloads folder] - {PR_MERGE_DATE}
+
+- Add custom download folder in preferences
+- Better auto-detection of the default downloads folder on Windows
+
 ## [Open, Copy and Download assets] - 2026-01-14
 
 - Add Open in Immich, Copy and Download actions for assets in the Asset View
