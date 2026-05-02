@@ -1,9 +1,9 @@
 import { Cache, Clipboard, getPreferenceValues, showHUD, showToast, Toast } from "@raycast/api";
 import { runPowerShellScript } from "@raycast/utils";
+import { existsSync } from "node:fs";
+import { realpath, writeFile } from "node:fs/promises";
 import { homedir, platform, tmpdir } from "node:os";
 import { join } from "node:path";
-import { realpath, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 
 const WINDOWS_REG_DOWNLOAD_KEY = String.raw`HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders`;
 const WINDOWS_REG_DOWNLOAD_VALUE = "{374DE290-123F-4565-9164-39C4925E467B}";
@@ -23,7 +23,9 @@ async function windowsGetDownloadFolder() {
   const path = await runPowerShellScript(
     `(Get-ItemProperty -Path "${WINDOWS_REG_DOWNLOAD_KEY}")."${WINDOWS_REG_DOWNLOAD_VALUE}"`,
     { timeout: 2000 },
-  ).catch(() => null);
+  )
+    .then((p) => p.trim())
+    .catch(() => null);
 
   if (path && existsSync(path)) {
     const realPath = await realpath(path);
