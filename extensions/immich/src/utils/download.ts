@@ -7,16 +7,22 @@ import { join } from "node:path";
 
 const WINDOWS_REG_DOWNLOAD_KEY = String.raw`HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders`;
 const WINDOWS_REG_DOWNLOAD_VALUE = "{374DE290-123F-4565-9164-39C4925E467B}";
+const WINDOWS_REG_DOWNLOAD_CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
 const cache = new Cache();
 
 /**
  * Attempts to read the user's Downloads folder path from the Windows registry (in case user has moved it).
  * Caches the result to avoid repeated registry reads (takes about 250ms on my machine).
+ * Cache expires after 1 hour
  * @returns The path to the Downloads folder, or null if it cannot be determined.
  */
 async function windowsGetDownloadFolder() {
-  if (cache.has("download_folder")) {
+  const cacheExpired = cache.has("download_folder_fetch_timestamp")
+    ? Date.now() - parseInt(cache.get("download_folder_fetch_timestamp") || "0") > WINDOWS_REG_DOWNLOAD_CACHE_TTL
+    : true;
+
+  if (!cacheExpired && cache.has("download_folder")) {
     return cache.get("download_folder") || null;
   }
 
@@ -30,10 +36,12 @@ async function windowsGetDownloadFolder() {
   if (path && existsSync(path)) {
     const realPath = await realpath(path);
     cache.set("download_folder", realPath);
+    cache.set("download_folder_fetch_timestamp", Date.now().toString());
     return realPath;
   }
 
   cache.set("download_folder", "");
+  cache.set("download_folder_fetch_timestamp", Date.now().toString());
   return null;
 }
 
@@ -140,7 +148,7 @@ export async function downloadImageToDownloads(url: string, filename: string) {
     await fetchFileToDisk(path, url, (percent) => {
       toast.message = `${percent}%`;
     });
-    // New toast to because the progress callback can overwrite the path
+    // New toast because the progress callback can overwrite the path
     await showToast(Toast.Style.Success, "Download complete", path);
   } catch (error) {
     toast.style = Toast.Style.Failure;
