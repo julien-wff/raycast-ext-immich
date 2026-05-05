@@ -1,6 +1,6 @@
 # Immich Changelog
 
-## [Custom Downloads folder] - {PR_MERGE_DATE}
+## [Custom Downloads folder] - 2026-05-05
 
 - Add custom download folder in preferences
 - Better auto-detection of the default downloads folder on Windows
